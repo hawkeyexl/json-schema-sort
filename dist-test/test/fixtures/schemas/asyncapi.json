@@ -1,0 +1,30 @@
+{
+  "asyncapi": "2.6.0",
+  "info": {
+    "title": "User Events API",
+    "version": "1.0.0"
+  },
+  "channels": {
+    "user/signedup": {
+      "publish": {
+        "message": {
+          "payload": {
+            "type": "object",
+            "properties": {
+              "userId": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string"
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
