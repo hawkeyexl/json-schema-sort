@@ -1,5 +1,5 @@
-const { expect } = require('chai');
-const { isObject, hasCircularReference, sortObjectKeys, getObjectKeys } = require('../src/utils');
+import { expect } from 'chai';
+import { isObject, hasCircularReference, sortObjectKeys, getObjectKeys } from '../src/utils';
 
 describe('Utils', () => {
   describe('isObject', () => {
@@ -19,7 +19,7 @@ describe('Utils', () => {
 
   describe('hasCircularReference', () => {
     it('should detect circular references', () => {
-      const obj = { a: 1 };
+      const obj: any = { a: 1 };
       obj.self = obj;
       expect(hasCircularReference(obj)).to.be.true;
     });
@@ -31,6 +31,7 @@ describe('Utils', () => {
 
     it('should return false for non-objects', () => {
       expect(hasCircularReference(null)).to.be.false;
+      expect(hasCircularReference(123)).to.be.false;
       expect(hasCircularReference('string')).to.be.false;
     });
   });
@@ -39,25 +40,25 @@ describe('Utils', () => {
     it('should sort object keys according to specified order', () => {
       const obj = { c: 3, a: 1, b: 2 };
       const keyOrder = ['a', 'b', 'c'];
-      const sorted = sortObjectKeys(obj, keyOrder);
+      const result = sortObjectKeys(obj, keyOrder);
       
-      expect(Object.keys(sorted)).to.deep.equal(['a', 'b', 'c']);
-      expect(sorted).to.deep.equal({ a: 1, b: 2, c: 3 });
+      expect(Object.keys(result)).to.deep.equal(['a', 'b', 'c']);
+      expect(result).to.deep.equal({ a: 1, b: 2, c: 3 });
     });
 
     it('should place additional keys at the end alphabetically', () => {
       const obj = { z: 26, a: 1, y: 25, b: 2 };
       const keyOrder = ['a', 'b'];
-      const sorted = sortObjectKeys(obj, keyOrder);
+      const result = sortObjectKeys(obj, keyOrder);
       
-      expect(Object.keys(sorted)).to.deep.equal(['a', 'b', 'y', 'z']);
+      expect(Object.keys(result)).to.deep.equal(['a', 'b', 'y', 'z']);
     });
   });
 
   describe('getObjectKeys', () => {
     it('should return object keys', () => {
-      const obj = { a: 1, b: 2 };
-      expect(getObjectKeys(obj)).to.deep.equal(['a', 'b']);
+      const obj = { a: 1, b: 2, c: 3 };
+      expect(getObjectKeys(obj)).to.deep.equal(['a', 'b', 'c']);
     });
 
     it('should return empty array for null/undefined', () => {

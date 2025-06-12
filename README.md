@@ -1,6 +1,6 @@
 # object-schema-sorter
 
-Sort object keys based on JSON Schema property order.
+Sort object keys based on JSON Schema property order with full TypeScript support.
 
 ## Installation
 ```bash
@@ -8,6 +8,8 @@ npm install object-schema-sorter
 ```
 
 ## Usage
+
+### JavaScript (CommonJS)
 ```javascript
 const { sortBySchema } = require('object-schema-sorter');
 
@@ -30,7 +32,31 @@ const sorted = sortBySchema({ object, schema });
 console.log(Object.keys(sorted)); // ['name', 'age', 'email']
 ```
 
+### TypeScript (ES Modules)
+```typescript
+import { sortBySchema, JsonSchema } from 'object-schema-sorter';
+
+const schema: JsonSchema = {
+  type: 'object',
+  properties: {
+    name: { type: 'string' },
+    age: { type: 'number' },
+    email: { type: 'string' }
+  }
+};
+
+const object = {
+  email: 'john@example.com',
+  name: 'John Doe',
+  age: 30
+};
+
+const sorted = sortBySchema({ object, schema });
+console.log(Object.keys(sorted)); // ['name', 'age', 'email']
+```
+
 ## Features
+- **TypeScript First**: Built with TypeScript with comprehensive type definitions
 - Sorts object keys according to JSON Schema property order
 - Supports JSON Schema, OpenAPI, AsyncAPI, and any object with valid JSON schemas
 - Handles nested objects and arrays recursively

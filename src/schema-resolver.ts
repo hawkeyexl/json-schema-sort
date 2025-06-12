@@ -1,14 +1,12 @@
-const jsonpointer = require('jsonpointer');
-const { SCHEMA_TYPES } = require('./constants');
-const { isObject } = require('./utils');
+import * as jsonpointer from 'jsonpointer';
+import { SCHEMA_TYPES, SchemaType } from './constants';
+import { isObject } from './utils';
+import { AnySchema, JsonSchema, MergedSchemaProperties } from './types';
 
 /**
  * Resolve schema at JSON Pointer
- * @param {object} schema - The schema document
- * @param {string} pointer - JSON Pointer string
- * @returns {object|null} Resolved schema or null if not found
  */
-function resolveSchema(schema, pointer) {
+export function resolveSchema(schema: AnySchema, pointer: string): AnySchema | null {
   if (!pointer || pointer === '#') {
     return schema;
   }
@@ -16,18 +14,15 @@ function resolveSchema(schema, pointer) {
   try {
     const result = jsonpointer.get(schema, pointer.replace(/^#/, ''));
     return result === undefined ? null : result;
-  } catch (error) {
+  } catch {
     return null;
   }
 }
 
 /**
  * Resolve $ref references
- * @param {object} schema - The schema document
- * @param {string} ref - The $ref value
- * @returns {object|null} Resolved schema or null if not found
  */
-function resolveRef(schema, ref) {
+export function resolveRef(schema: AnySchema, ref: string): AnySchema | null {
   if (!ref || !ref.startsWith('#')) {
     // Only handle internal references for now
     return null;
@@ -38,19 +33,17 @@ function resolveRef(schema, ref) {
 
 /**
  * Detect schema type
- * @param {object} schema - The schema to analyze
- * @returns {string} The detected schema type
  */
-function detectSchemaType(schema) {
+export function detectSchemaType(schema: AnySchema): SchemaType {
   if (!isObject(schema)) {
     return SCHEMA_TYPES.GENERIC;
   }
   
-  if (schema.openapi) {
+  if ('openapi' in schema && schema.openapi) {
     return SCHEMA_TYPES.OPENAPI;
   }
   
-  if (schema.asyncapi) {
+  if ('asyncapi' in schema && schema.asyncapi) {
     return SCHEMA_TYPES.ASYNCAPI;
   }
   
@@ -63,17 +56,14 @@ function detectSchemaType(schema) {
 
 /**
  * Find matching schema from anyOf/oneOf array
- * @param {object} object - The object to match
- * @param {object[]} schemas - Array of schemas to match against
- * @returns {object|null} Best matching schema or null
  */
-function findMatchingSchema(object, schemas) {
+export function findMatchingSchema(object: Record<string, unknown>, schemas: JsonSchema[]): JsonSchema | null {
   if (!Array.isArray(schemas) || schemas.length === 0) {
     return null;
   }
   
   // Simple heuristic: find schema with most matching properties
-  let bestMatch = null;
+  let bestMatch: JsonSchema | null = null;
   let bestScore = -1;
   
   for (const schema of schemas) {
@@ -98,16 +88,14 @@ function findMatchingSchema(object, schemas) {
 
 /**
  * Merge properties from multiple schemas (for allOf)
- * @param {object[]} schemas - Array of schemas to merge
- * @returns {object} Merged schema properties
  */
-function mergeSchemaProperties(schemas) {
+export function mergeSchemaProperties(schemas: JsonSchema[]): MergedSchemaProperties {
   if (!Array.isArray(schemas)) {
-    return {};
+    return { properties: {}, propertyOrder: [] };
   }
   
-  const mergedProperties = {};
-  const propertyOrder = [];
+  const mergedProperties: Record<string, JsonSchema> = {};
+  const propertyOrder: string[] = [];
   
   for (const schema of schemas) {
     if (isObject(schema) && schema.properties) {
@@ -128,11 +116,3 @@ function mergeSchemaProperties(schemas) {
     propertyOrder
   };
 }
-
-module.exports = {
-  resolveSchema,
-  resolveRef,
-  detectSchemaType,
-  findMatchingSchema,
-  mergeSchemaProperties
-};

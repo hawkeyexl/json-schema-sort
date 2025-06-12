@@ -1,10 +1,11 @@
-const { expect } = require('chai');
-const { resolveSchema, resolveRef, detectSchemaType, findMatchingSchema, mergeSchemaProperties } = require('../src/schema-resolver');
-const { SCHEMA_TYPES } = require('../src/constants');
+import { expect } from 'chai';
+import { resolveSchema, resolveRef, detectSchemaType, findMatchingSchema, mergeSchemaProperties } from '../src/schema-resolver';
+import { SCHEMA_TYPES } from '../src/constants';
+import { JsonSchema } from '../src/types';
 
 describe('Schema Resolver', () => {
   describe('resolveSchema', () => {
-    const schema = {
+    const schema: JsonSchema = {
       type: 'object',
       properties: {
         user: {
@@ -23,7 +24,7 @@ describe('Schema Resolver', () => {
 
     it('should resolve schema at JSON pointer', () => {
       const result = resolveSchema(schema, '#/properties/user');
-      expect(result).to.deep.equal(schema.properties.user);
+      expect(result).to.deep.equal(schema.properties!.user);
     });
 
     it('should return null for invalid pointer', () => {
@@ -33,7 +34,7 @@ describe('Schema Resolver', () => {
   });
 
   describe('resolveRef', () => {
-    const schema = {
+    const schema: JsonSchema = {
       definitions: {
         User: {
           type: 'object',
@@ -46,7 +47,7 @@ describe('Schema Resolver', () => {
 
     it('should resolve internal $ref', () => {
       const result = resolveRef(schema, '#/definitions/User');
-      expect(result).to.deep.equal(schema.definitions.User);
+      expect(result).to.deep.equal(schema.definitions!.User);
     });
 
     it('should return null for external $ref', () => {
@@ -55,7 +56,7 @@ describe('Schema Resolver', () => {
     });
 
     it('should return null for invalid $ref', () => {
-      const result = resolveRef(schema, null);
+      const result = resolveRef(schema, '');
       expect(result).to.be.null;
     });
   });
@@ -83,7 +84,7 @@ describe('Schema Resolver', () => {
   });
 
   describe('findMatchingSchema', () => {
-    const schemas = [
+    const schemas: JsonSchema[] = [
       {
         properties: {
           name: { type: 'string' },
@@ -111,7 +112,7 @@ describe('Schema Resolver', () => {
   });
 
   describe('mergeSchemaProperties', () => {
-    const schemas = [
+    const schemas: JsonSchema[] = [
       {
         properties: {
           name: { type: 'string' },
@@ -136,8 +137,8 @@ describe('Schema Resolver', () => {
     });
 
     it('should return empty object for invalid input', () => {
-      const result = mergeSchemaProperties(null);
-      expect(result).to.deep.equal({});
+      const result = mergeSchemaProperties(null as any);
+      expect(result).to.deep.equal({ properties: {}, propertyOrder: [] });
     });
   });
 });

@@ -1,9 +1,10 @@
-const { expect } = require('chai');
-const { sortBySchema } = require('../src/index');
+import { expect } from 'chai';
+import { sortBySchema } from '../src/index';
+import { JsonSchema, OpenApiSchema } from '../src/types';
 
 describe('Integration Tests', () => {
   it('should work end-to-end with complex nested structures', () => {
-    const complexSchema = {
+    const complexSchema: JsonSchema = {
       type: 'object',
       properties: {
         user: {
@@ -58,7 +59,7 @@ describe('Integration Tests', () => {
       }
     };
 
-    const result = sortBySchema({ object: complexObject, schema: complexSchema });
+    const result = sortBySchema({ object: complexObject, schema: complexSchema }) as Record<string, any>;
 
     // Check top-level order
     expect(Object.keys(result)).to.deep.equal(['user', 'settings', 'metadata']);
@@ -80,7 +81,7 @@ describe('Integration Tests', () => {
   });
 
   it('should handle OpenAPI-style schemas', () => {
-    const openApiSchema = {
+    const openApiSchema: OpenApiSchema = {
       openapi: '3.0.0',
       info: {
         title: 'Test API',
@@ -112,13 +113,13 @@ describe('Integration Tests', () => {
       object: userObject,
       schema: openApiSchema,
       options: { schemaPointer: '#/components/schemas/User' }
-    });
+    }) as Record<string, any>;
 
     expect(Object.keys(result)).to.deep.equal(['id', 'name', 'email', 'created_at']);
   });
 
   it('should handle arrays with mixed object structures', () => {
-    const schema = {
+    const schema: JsonSchema = {
       type: 'object',
       properties: {
         items: {
@@ -150,7 +151,7 @@ describe('Integration Tests', () => {
       ]
     };
 
-    const result = sortBySchema({ object: arrayObject, schema });
+    const result = sortBySchema({ object: arrayObject, schema }) as Record<string, any>;
 
     expect(result.items[0]).to.deep.equal({
       priority: 1,

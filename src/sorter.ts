@@ -1,18 +1,12 @@
-const { DEFAULT_MAX_DEPTH } = require('./constants');
-const { isObject, hasCircularReference, sortObjectKeys } = require('./utils');
-const { resolveSchema, resolveRef, findMatchingSchema, mergeSchemaProperties } = require('./schema-resolver');
+import { DEFAULT_MAX_DEPTH } from './constants';
+import { isObject, hasCircularReference, sortObjectKeys } from './utils';
+import { resolveSchema, resolveRef, findMatchingSchema, mergeSchemaProperties } from './schema-resolver';
+import { AnySchema, JsonSchema, SortBySchemaParams } from './types';
 
 /**
  * Sort an object by schema
- * @param {object} params - Parameters object
- * @param {object} params.object - The object to sort
- * @param {object} params.schema - The schema document
- * @param {object} params.options - Options object
- * @param {number} params.options.maxDepth - Maximum recursion depth
- * @param {string} params.options.schemaPointer - JSON Pointer to sub-schema
- * @returns {object} Sorted object
  */
-function sortBySchema({ object, schema, options = {} }) {
+export function sortBySchema({ object, schema, options = {} }: SortBySchemaParams): unknown {
   const { maxDepth = DEFAULT_MAX_DEPTH, schemaPointer } = options;
   
   if (!isObject(object) || !isObject(schema)) {
@@ -27,10 +21,11 @@ function sortBySchema({ object, schema, options = {} }) {
   // Resolve schema pointer if provided
   let targetSchema = schema;
   if (schemaPointer) {
-    targetSchema = resolveSchema(schema, schemaPointer);
-    if (!targetSchema) {
+    const resolvedSchema = resolveSchema(schema, schemaPointer);
+    if (!resolvedSchema) {
       throw new Error(`Schema not found at pointer: ${schemaPointer}`);
     }
+    targetSchema = resolvedSchema;
   }
   
   return sortObject(object, targetSchema, schema, 0, maxDepth);
@@ -38,14 +33,14 @@ function sortBySchema({ object, schema, options = {} }) {
 
 /**
  * Recursively sort an object
- * @param {object} object - The object to sort
- * @param {object} schema - The schema to use for sorting
- * @param {object} rootSchema - The root schema document for resolving $refs
- * @param {number} currentDepth - Current recursion depth
- * @param {number} maxDepth - Maximum recursion depth
- * @returns {object} Sorted object
  */
-function sortObject(object, schema, rootSchema, currentDepth, maxDepth) {
+export function sortObject(
+  object: Record<string, unknown>, 
+  schema: AnySchema, 
+  rootSchema: AnySchema, 
+  currentDepth: number, 
+  maxDepth: number
+): Record<string, unknown> {
   if (!isObject(object) || currentDepth >= maxDepth) {
     return object;
   }
@@ -65,7 +60,7 @@ function sortObject(object, schema, rootSchema, currentDepth, maxDepth) {
   // Handle allOf - merge all schemas
   if (Array.isArray(schema.allOf)) {
     const merged = mergeSchemaProperties(schema.allOf);
-    const mergedSchema = { properties: merged.properties };
+    const mergedSchema: JsonSchema = { properties: merged.properties };
     return sortObject(object, mergedSchema, rootSchema, currentDepth, maxDepth);
   }
   
@@ -91,14 +86,15 @@ function sortObject(object, schema, rootSchema, currentDepth, maxDepth) {
   const sortedObj = sortObjectKeys(object, propertyOrder);
   
   // Recursively sort nested objects
-  const result = {};
+  const result: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(sortedObj)) {
     if (Array.isArray(value)) {
-      result[key] = sortArray(value, schema.properties?.[key]?.items, rootSchema, currentDepth + 1, maxDepth);
+      const itemSchema = (schema.properties?.[key] as JsonSchema)?.items;
+      result[key] = sortArray(value, itemSchema, rootSchema, currentDepth + 1, maxDepth);
     } else if (isObject(value)) {
       const nestedSchema = schema.properties?.[key];
       if (nestedSchema) {
-        result[key] = sortObject(value, nestedSchema, rootSchema, currentDepth + 1, maxDepth);
+        result[key] = sortObject(value as Record<string, unknown>, nestedSchema as AnySchema, rootSchema, currentDepth + 1, maxDepth);
       } else {
         result[key] = value;
       }
@@ -112,10 +108,8 @@ function sortObject(object, schema, rootSchema, currentDepth, maxDepth) {
 
 /**
  * Extract property order from schema
- * @param {object} schema - The schema object
- * @returns {string[]} Array of property names in order
  */
-function getPropertyOrder(schema) {
+export function getPropertyOrder(schema: AnySchema): string[] {
   if (!isObject(schema) || !schema.properties) {
     return [];
   }
@@ -125,20 +119,25 @@ function getPropertyOrder(schema) {
 
 /**
  * Sort array items
- * @param {Array} array - The array to sort
- * @param {object} itemSchema - Schema for array items
- * @param {object} rootSchema - The root schema document for resolving $refs
- * @param {number} currentDepth - Current recursion depth
- * @param {number} maxDepth - Maximum recursion depth
- * @returns {Array} Array with sorted items
  */
-function sortArray(array, itemSchema, rootSchema, currentDepth, maxDepth) {
+export function sortArray(
+  array: unknown[], 
+  itemSchema: JsonSchema | JsonSchema[] | undefined, 
+  rootSchema: AnySchema, 
+  currentDepth: number, 
+  maxDepth: number
+): unknown[] {
   if (!Array.isArray(array) || currentDepth >= maxDepth) {
     return array;
   }
   
   if (!itemSchema) {
     return array;
+  }
+  
+  // Handle array of schemas case
+  if (Array.isArray(itemSchema)) {
+    return array; // For now, skip complex array schemas
   }
   
   return array.map(item => {
@@ -151,12 +150,12 @@ function sortArray(array, itemSchema, rootSchema, currentDepth, maxDepth) {
 
 /**
  * Merge additional properties at the end
- * @param {object} sortedObj - Already sorted object
- * @param {object} originalObj - Original object with all properties
- * @param {string[]} schemaProps - Properties defined in schema
- * @returns {object} Object with additional properties merged
  */
-function mergeAdditionalProperties(sortedObj, originalObj, schemaProps) {
+export function mergeAdditionalProperties(
+  sortedObj: Record<string, unknown>, 
+  originalObj: Record<string, unknown>, 
+  schemaProps: string[]
+): Record<string, unknown> {
   const result = { ...sortedObj };
   const additionalProps = Object.keys(originalObj)
     .filter(key => !schemaProps.includes(key))
@@ -168,11 +167,3 @@ function mergeAdditionalProperties(sortedObj, originalObj, schemaProps) {
   
   return result;
 }
-
-module.exports = {
-  sortBySchema,
-  sortObject,
-  getPropertyOrder,
-  sortArray,
-  mergeAdditionalProperties
-};

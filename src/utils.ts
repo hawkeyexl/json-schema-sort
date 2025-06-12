@@ -1,19 +1,14 @@
 /**
  * Check if value is a plain object
- * @param {*} value - The value to check
- * @returns {boolean} True if value is a plain object
  */
-function isObject(value) {
+export function isObject(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
 /**
  * Check if object has circular references
- * @param {object} object - The object to check
- * @param {Set} seen - Set of already seen objects
- * @returns {boolean} True if circular reference is detected
  */
-function hasCircularReference(object, seen = new Set()) {
+export function hasCircularReference(object: unknown, seen = new Set<unknown>()): boolean {
   if (seen.has(object)) {
     return true;
   }
@@ -36,12 +31,9 @@ function hasCircularReference(object, seen = new Set()) {
 
 /**
  * Sort object keys according to specified order
- * @param {object} object - The object to sort
- * @param {string[]} keyOrder - Array of keys in desired order
- * @returns {object} New object with sorted keys
  */
-function sortObjectKeys(object, keyOrder) {
-  const sortedObj = {};
+export function sortObjectKeys(object: Record<string, unknown>, keyOrder: string[]): Record<string, unknown> {
+  const sortedObj: Record<string, unknown> = {};
   const objectKeys = Object.keys(object);
   
   // Add keys in the specified order
@@ -65,16 +57,7 @@ function sortObjectKeys(object, keyOrder) {
 
 /**
  * Get all object keys
- * @param {object} object - The object to get keys from
- * @returns {string[]} Array of object keys
  */
-function getObjectKeys(object) {
+export function getObjectKeys(object: Record<string, unknown> | null | undefined): string[] {
   return Object.keys(object || {});
 }
-
-module.exports = {
-  isObject,
-  hasCircularReference,
-  sortObjectKeys,
-  getObjectKeys
-};

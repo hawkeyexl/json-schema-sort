@@ -1,15 +1,16 @@
-const { expect } = require('chai');
-const fs = require('fs');
-const path = require('path');
-const { sortBySchema } = require('../src/sorter');
+import { expect } from 'chai';
+import * as fs from 'fs';
+import * as path from 'path';
+import { sortBySchema } from '../src/sorter';
+import { JsonSchema } from '../src/types';
 
 describe('Sorter', () => {
-  const schema = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/schemas/json-schema.json'), 'utf8'));
+  const schema: JsonSchema = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/schemas/json-schema.json'), 'utf8'));
   const userObject = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/objects/user.json'), 'utf8'));
 
   describe('sortBySchema', () => {
     it('should sort object keys according to schema property order', () => {
-      const result = sortBySchema({ object: userObject, schema });
+      const result = sortBySchema({ object: userObject, schema }) as Record<string, any>;
       
       const keys = Object.keys(result);
       const expectedOrder = ['name', 'age', 'email', 'address', 'phone'];
@@ -17,7 +18,7 @@ describe('Sorter', () => {
     });
 
     it('should recursively sort nested objects', () => {
-      const result = sortBySchema({ object: userObject, schema });
+      const result = sortBySchema({ object: userObject, schema }) as Record<string, any>;
       
       const addressKeys = Object.keys(result.address);
       const expectedAddressOrder = ['street', 'city', 'country'];
@@ -36,7 +37,7 @@ describe('Sorter', () => {
     });
 
     it('should handle circular references', () => {
-      const circularObj = { a: 1 };
+      const circularObj: any = { a: 1 };
       circularObj.self = circularObj;
       
       expect(() => sortBySchema({ object: circularObj, schema }))
@@ -44,7 +45,7 @@ describe('Sorter', () => {
     });
 
     it('should handle schema pointers', () => {
-      const fullSchema = {
+      const fullSchema: JsonSchema = {
         definitions: {
           User: schema
         }
@@ -54,7 +55,7 @@ describe('Sorter', () => {
         object: userObject, 
         schema: fullSchema, 
         options: { schemaPointer: '#/definitions/User' }
-      });
+      }) as Record<string, any>;
       
       const keys = Object.keys(result);
       const expectedOrder = ['name', 'age', 'email', 'address', 'phone'];
@@ -76,7 +77,7 @@ describe('Sorter', () => {
         object: deepObject, 
         schema, 
         options: { maxDepth: 1 } 
-      });
+      }) as Record<string, any>;
       
       // Top level should be sorted
       expect(Object.keys(result)).to.deep.equal(['name', 'email', 'address']);
@@ -86,7 +87,7 @@ describe('Sorter', () => {
     });
 
     it('should handle arrays', () => {
-      const arraySchema = {
+      const arraySchema: JsonSchema = {
         type: 'object',
         properties: {
           users: {
@@ -109,14 +110,14 @@ describe('Sorter', () => {
         ]
       };
       
-      const result = sortBySchema({ object: arrayObject, schema: arraySchema });
+      const result = sortBySchema({ object: arrayObject, schema: arraySchema }) as Record<string, any>;
       
       expect(result.users[0]).to.deep.equal({ name: 'Alice', age: 25 });
       expect(result.users[1]).to.deep.equal({ name: 'Bob', age: 30 });
     });
 
     it('should handle $ref references', () => {
-      const refSchema = {
+      const refSchema: JsonSchema = {
         type: 'object',
         properties: {
           user: {
@@ -136,17 +137,17 @@ describe('Sorter', () => {
       
       const refObject = {
         user: {
-          age: 30,
-          name: 'John'
+          age: 25,
+          name: 'Alice'
         }
       };
       
-      const result = sortBySchema({ object: refObject, schema: refSchema });
+      const result = sortBySchema({ object: refObject, schema: refSchema }) as Record<string, any>;
       expect(Object.keys(result.user)).to.deep.equal(['name', 'age']);
     });
 
     it('should handle allOf composition', () => {
-      const allOfSchema = {
+      const allOfSchema: JsonSchema = {
         type: 'object',
         allOf: [
           {
@@ -163,16 +164,16 @@ describe('Sorter', () => {
       };
       
       const allOfObject = {
-        age: 30,
-        name: 'John'
+        age: 25,
+        name: 'Alice'
       };
       
-      const result = sortBySchema({ object: allOfObject, schema: allOfSchema });
+      const result = sortBySchema({ object: allOfObject, schema: allOfSchema }) as Record<string, any>;
       expect(Object.keys(result)).to.deep.equal(['name', 'age']);
     });
 
     it('should handle anyOf composition', () => {
-      const anyOfSchema = {
+      const anyOfSchema: JsonSchema = {
         type: 'object',
         anyOf: [
           {
@@ -190,25 +191,28 @@ describe('Sorter', () => {
       };
       
       const anyOfObject = {
-        age: 30,
-        name: 'John'
+        age: 25,
+        name: 'Alice'
       };
       
-      const result = sortBySchema({ object: anyOfObject, schema: anyOfSchema });
+      const result = sortBySchema({ object: anyOfObject, schema: anyOfSchema }) as Record<string, any>;
       expect(Object.keys(result)).to.deep.equal(['name', 'age']);
     });
 
     it('should throw error for invalid schema pointer', () => {
-      expect(() => sortBySchema({
-        object: userObject,
-        schema,
-        options: { schemaPointer: '#/invalid/pointer' }
+      expect(() => sortBySchema({ 
+        object: userObject, 
+        schema, 
+        options: { schemaPointer: '#/invalid/pointer' } 
       })).to.throw('Schema not found at pointer: #/invalid/pointer');
     });
 
     it('should handle schemas without properties', () => {
-      const emptySchema = { type: 'object' };
-      const result = sortBySchema({ object: userObject, schema: emptySchema });
+      const emptySchema: JsonSchema = {
+        type: 'object'
+      };
+      
+      const result = sortBySchema({ object: userObject, schema: emptySchema }) as Record<string, any>;
       
       // Should return object with keys in alphabetical order
       const keys = Object.keys(result);
