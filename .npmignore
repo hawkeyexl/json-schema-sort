@@ -1,0 +1,5 @@
+test/
+.eslintrc.json
+.nyc_output/
+coverage/
+*.log
