@@ -1,0 +1,49 @@
+{
+  "name": "object-schema-sorter",
+  "version": "1.0.0",
+  "description": "Sort object keys based on JSON Schema property order",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/**/*",
+    "src/**/*"
+  ],
+  "scripts": {
+    "build": "npm run clean && tsc",
+    "build:test": "npm run clean && tsc -p tsconfig.test.json && cp -r test/fixtures dist-test/test/",
+    "test": "npm run build:test && mocha dist-test/test/**/*.test.js --recursive",
+    "test:coverage": "npm run build:test && nyc mocha dist-test/test/**/*.test.js --recursive",
+    "lint": "eslint src test --ext .ts,.js",
+    "clean": "rm -rf dist dist-test",
+    "prepublishOnly": "npm run build && npm test && npm run lint"
+  },
+  "keywords": [
+    "json-schema",
+    "object",
+    "sort",
+    "keys",
+    "openapi",
+    "asyncapi"
+  ],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "dependencies": {
+    "jsonpointer": "^5.0.1"
+  },
+  "devDependencies": {
+    "@types/chai": "^5.2.2",
+    "@types/jsonpointer": "^4.0.2",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^24.0.1",
+    "@typescript-eslint/eslint-plugin": "^8.34.0",
+    "@typescript-eslint/parser": "^8.34.0",
+    "chai": "^4.3.0",
+    "eslint": "^8.0.0",
+    "mocha": "^10.0.0",
+    "nyc": "^15.0.0",
+    "typescript": "^5.8.3"
+  }
+}

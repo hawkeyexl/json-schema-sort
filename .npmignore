@@ -1,0 +1,8 @@
+test/
+src/
+.eslintrc.json
+.nyc_output/
+coverage/
+*.log
+tsconfig*.json
+dist-test/
